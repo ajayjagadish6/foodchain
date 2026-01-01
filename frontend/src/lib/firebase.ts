@@ -1,0 +1,56 @@
+import { initializeApp } from 'firebase/app'
+import { getMessaging, getToken, isSupported } from 'firebase/messaging'
+import { api } from './api'
+
+function firebaseConfig() {
+  const cfg = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  }
+  if (!cfg.apiKey || !cfg.projectId || !cfg.messagingSenderId || !cfg.appId) return null
+  return cfg
+}
+
+/**
+ * Enable Web Push notifications via FCM.
+ *
+ * Requires:
+ * - Firebase web config env vars in .env
+ * - VITE_FIREBASE_VAPID_KEY
+ * - public/firebase-messaging-sw.js
+ * - Backend FCM enabled + service account
+ */
+export async function enablePushNotifications(): Promise<{ token: string } | null> {
+  const cfg = firebaseConfig()
+  if (!cfg) return null
+
+  const supported = await isSupported()
+  if (!supported) return null
+
+  const perm = await Notification.requestPermission()
+  if (perm !== 'granted') return null
+
+  const app = initializeApp(cfg)
+
+  // Register the messaging service worker
+  const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  const messaging = getMessaging(app)
+
+  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY
+  if (!vapidKey) return null
+
+  const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: reg })
+  if (!token) return null
+
+  // Store token on backend (used for sending push notifications)
+  await api('/api/notifications/register', {
+    method: 'POST',
+    body: JSON.stringify({ token, platform: 'web' })
+  })
+
+  return { token }
+}
