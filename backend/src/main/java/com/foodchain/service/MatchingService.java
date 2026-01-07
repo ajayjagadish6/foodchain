@@ -20,10 +20,11 @@ public class MatchingService {
     private final double maxDistanceKm;
 
     public MatchingService(DonationRepository donationRepo,
-                           FoodRequestRepository requestRepo,
-                           DeliveryRepository deliveryRepo,
-                           RealtimePublisher realtimePublisher,
-                           @Value("${foodchain.matching.maxDistanceKm}") double maxDistanceKm) {
+                        FoodRequestRepository requestRepo,
+                        DeliveryRepository deliveryRepo,
+                        RealtimePublisher realtimePublisher,
+                        NotificationService notificationService,
+                        @Value("${foodchain.matching.maxDistanceKm}") double maxDistanceKm) {
         this.donationRepo = donationRepo;
         this.requestRepo = requestRepo;
         this.deliveryRepo = deliveryRepo;

@@ -85,7 +85,7 @@ public class PubSubEventBus implements EventBus {
         }
 
         // Start subscriber
-        subscriber = Subscriber.newBuilder(subName, (PubsubMessage message, com.google.cloud.pubsub.v1.AckReplyConsumer consumer) -> {
+        subscriber = Subscriber.newBuilder(subName.toString(), (PubsubMessage message, com.google.cloud.pubsub.v1.AckReplyConsumer consumer) -> {
             try {
                 String msgSender = message.getAttributesOrDefault("senderId", "");
                 if (senderId.equals(msgSender)) {
