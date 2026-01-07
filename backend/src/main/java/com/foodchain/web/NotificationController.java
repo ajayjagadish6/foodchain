@@ -21,6 +21,6 @@ public class NotificationController {
     @PreAuthorize("hasAnyRole('DONOR','RECIPIENT','DRIVER','ADMIN')")
     public void register(@Valid @RequestBody NotificationDtos.RegisterTokenRequest req) {
         var jwt = CurrentUser.get();
-        notificationService.registerToken(jwt.userId(), req.token(), req.platform());
+        notificationService.registerDeviceToken(jwt.userId(), req.token(), req.platform());
     }
 }

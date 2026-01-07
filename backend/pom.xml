@@ -84,6 +84,29 @@
       <artifactId>mysql-connector-j</artifactId>
       <scope>runtime</scope>
     </dependency>
+    <!-- Firebase Admin SDK (FCM push notifications) -->
+    <dependency>
+      <groupId>com.google.firebase</groupId>
+      <artifactId>firebase-admin</artifactId>
+    </dependency>
+
+    <!-- Google Cloud Pub/Sub (optional realtime event bus for Cloud Run scaling) -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-pubsub</artifactId>
+    </dependency>
+
+    <!-- Twilio SMS -->
+    <dependency>
+      <groupId>com.twilio.sdk</groupId>
+      <artifactId>twilio</artifactId>
+    </dependency>
+
+    <!-- Caffeine cache (used for small in-memory caching like Directions/ETA) -->
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
 
     <!-- OpenAPI -->
     <dependency>
