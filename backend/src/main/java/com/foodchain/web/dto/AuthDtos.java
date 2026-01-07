@@ -17,7 +17,7 @@ public class AuthDtos {
             @NotBlank @Size(max = 120) String displayName,
             Role role,
             @NotBlank
-            @Pattern(regexp = "^\+[1-9]\d{7,14}$", message = "Phone must be in E.164 format, e.g. +14155552671")
+            @Pattern(regexp = "^\\+[1-9]\\d{7,14}$", message = "Phone must be in E.164 format, e.g. +14155552671")
             String phoneNumber
     ) {}
 
@@ -25,7 +25,7 @@ public class AuthDtos {
 
     public record VerifyPhoneRequest(
             @Email @NotBlank String email,
-            @NotBlank @Pattern(regexp = "^\d{6}$", message = "Code must be 6 digits") String code
+            @NotBlank @Pattern(regexp = "^\\d{6}$", message = "Code must be 6 digits") String code
     ) {}
 
     public record ResendPhoneRequest(@Email @NotBlank String email) {}
