@@ -1,61 +1,36 @@
 server:
   port: ${PORT:8080}
-  forward-headers-strategy: framework
 
 spring:
-  datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/foodchain?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
-    username: ${DB_USER:foodchain}
-    password: ${DB_PASSWORD:foodchain}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        format_sql: true
-    open-in-view: false
-  flyway:
-    enabled: true
+  application:
+    name: foodchain
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-
+# Defaults for local/dev. Cloud Run uses application-cloudrun.yml via profile "cloudrun".
 foodchain:
   security:
-    jwtSecret: ${JWT_SECRET:CHANGE_ME_IN_PROD}
-    jwtTtlMinutes: ${JWT_TTL_MINUTES:1440}
+    jwtSecret: ${JWT_SECRET:CHANGE_ME_TO_A_LONG_RANDOM_SECRET_32CHARS_MIN}
+    jwtIssuer: foodchain
+    jwtTtlMinutes: ${JWT_TTL_MINUTES:10080}  # 7 days
+
   matching:
-    maxDistanceKm: ${MATCH_MAX_DISTANCE_KM:10}
-  cleanup:
-    # Cron in server timezone. Default: daily at 23:59.
-    cron: ${DAILY_CLEANUP_CRON:0 59 23 * * *}
-
-  notifications:
-    smsNotifyDriversNewTasks: ${SMS_NOTIFY_DRIVERS_NEW_TASKS:false}
-    fcmEnabled: ${FCM_ENABLED:false}
-    # Base64-encoded Firebase service account JSON. Required if fcmEnabled=true.
-    fcmServiceAccountBase64: ${FCM_SERVICE_ACCOUNT_BASE64:}
-
-
-  realtime:
-    # inmemory (local/single instance) or pubsub (Cloud Run multi-instance)
-    bus: ${REALTIME_BUS:inmemory}
-    pubsub:
-      projectId: ${GCP_PROJECT_ID:}
-      topicId: ${PUBSUB_TOPIC_ID:foodchain-events}
-      subscriptionPrefix: ${PUBSUB_SUB_PREFIX:foodchain-events-sub}
+    maxDistanceKm: ${MATCH_MAX_DISTANCE_KM:15.0}
 
   sms:
     enabled: ${SMS_ENABLED:false}
-    twilio:
-      accountSid: ${TWILIO_ACCOUNT_SID:}
-      authToken: ${TWILIO_AUTH_TOKEN:}
-      fromNumber: ${TWILIO_FROM_NUMBER:}
+    notifyDriversNewTasks: ${SMS_NOTIFY_DRIVERS_NEW_TASKS:false}
 
-  phoneVerification:
-    codeTtlMinutes: ${PHONE_CODE_TTL_MINUTES:10}
-    resendCooldownSeconds: ${PHONE_RESEND_COOLDOWN_SECONDS:45}
+  push:
+    enabled: ${FCM_ENABLED:false}
 
+  realtime:
+    bus: ${REALTIME_BUS:inmemory}
+    topicId: ${PUBSUB_TOPIC_ID:foodchain-events}
+    subscriptionPrefix: ${PUBSUB_SUB_PREFIX:foodchain-events-sub}
+
+logging:
+  level:
+    root: INFO
+    com.foodchain: INFO
