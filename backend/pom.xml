@@ -28,7 +28,7 @@
     <testcontainers.version>1.20.4</testcontainers.version>
 
     <!-- Cloud SQL SocketFactory for MySQL Connector/J 8 -->
-    <cloudsql.socketfactory.version>1.27.0</cloudsql.socketfactory.version>
+    <cloudsql.socketfactory.version>1.25.1</cloudsql.socketfactory.version>
   </properties>
 
   <dependencyManagement>
