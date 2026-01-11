@@ -6,16 +6,32 @@
   <groupId>com.foodchain</groupId>
   <artifactId>foodchain-backend</artifactId>
   <version>0.1.0</version>
+  <packaging>jar</packaging>
+
   <name>FoodChain Backend</name>
   <description>FoodChain API + UI (served as static files)</description>
 
   <properties>
     <java.version>21</java.version>
     <spring.boot.version>3.3.5</spring.boot.version>
+
+    <!-- IMPORTANT: set this to your @SpringBootApplication class if auto-detection fails -->
+    <!-- Example: com.foodchain.FoodChainApplication -->
+    <start-class>com.foodchain.FoodChainApplication</start-class>
+
+    <!-- Library versions (kept here so dependencies don't need explicit versions) -->
+    <google.cloud.pubsub.version>1.136.1</google.cloud.pubsub.version>
+    <caffeine.version>3.1.8</caffeine.version>
+    <twilio.version>10.4.1</twilio.version>
+    <firebase.admin.version>9.2.0</firebase.admin.version>
+    <springdoc.version>2.6.0</springdoc.version>
+    <jjwt.version>0.12.6</jjwt.version>
+    <testcontainers.version>1.20.4</testcontainers.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!-- Spring Boot BOM -->
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
@@ -23,38 +39,62 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-    <!-- Pub/Sub for realtime fanout (Cloud Run) -->
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-pubsub</artifactId>
-      <version>1.136.1</version>
-    </dependency>
 
-    <!-- Caffeine cache for Google Directions/ETA caching -->
-    <dependency>
-      <groupId>com.github.ben-manes.caffeine</groupId>
-      <artifactId>caffeine</artifactId>
-      <version>3.1.8</version>
-    </dependency>
+      <!-- Manage versions for libraries not covered by Boot BOM -->
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-pubsub</artifactId>
+        <version>${google.cloud.pubsub.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+        <version>${caffeine.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.twilio.sdk</groupId>
+        <artifactId>twilio</artifactId>
+        <version>${twilio.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.firebase</groupId>
+        <artifactId>firebase-admin</artifactId>
+        <version>${firebase.admin.version}</version>
+      </dependency>
 
-    <!-- Twilio SMS -->
-    <dependency>
-      <groupId>com.twilio.sdk</groupId>
-      <artifactId>twilio</artifactId>
-      <version>10.4.1</version>
-    </dependency>
+      <!-- JWT + OpenAPI versions -->
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        <version>${springdoc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-api</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-impl</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-jackson</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
 
-<!-- Firebase Cloud Messaging (FCM) -->
-    <dependency>
-      <groupId>com.google.firebase</groupId>
-      <artifactId>firebase-admin</artifactId>
-      <version>9.2.0</version>
-    </dependency>
-
-  </dependencies>
+      <!-- Testcontainers version -->
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
+    </dependencies>
   </dependencyManagement>
 
   <dependencies>
+    <!-- Spring Boot starters -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -75,34 +115,33 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+
+    <!-- DB migrations -->
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-core</artifactId>
     </dependency>
+
+    <!-- MySQL -->
     <dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>
       <scope>runtime</scope>
     </dependency>
-    <!-- Firebase Admin SDK (FCM push notifications) -->
+
+    <!-- Optional integrations -->
     <dependency>
       <groupId>com.google.firebase</groupId>
       <artifactId>firebase-admin</artifactId>
     </dependency>
-
-    <!-- Google Cloud Pub/Sub (optional realtime event bus for Cloud Run scaling) -->
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-pubsub</artifactId>
     </dependency>
-
-    <!-- Twilio SMS -->
     <dependency>
       <groupId>com.twilio.sdk</groupId>
       <artifactId>twilio</artifactId>
     </dependency>
-
-    <!-- Caffeine cache (used for small in-memory caching like Directions/ETA) -->
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
@@ -112,25 +151,21 @@
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-      <version>2.6.0</version>
     </dependency>
 
     <!-- JWT -->
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-api</artifactId>
-      <version>0.12.6</version>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-impl</artifactId>
-      <version>0.12.6</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-jackson</artifactId>
-      <version>0.12.6</version>
       <scope>runtime</scope>
     </dependency>
 
@@ -148,20 +183,31 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>1.20.4</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
+    <!-- Produces backend/target/foodchain.jar -->
+    <finalName>foodchain</finalName>
+
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
-          <finalName>foodchain</finalName>
+          <!-- Helps ensure a proper bootable jar with Main-Class -->
+          <mainClass>${start-class}</mainClass>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -170,6 +216,5 @@
         </configuration>
       </plugin>
     </plugins>
-    <finalName>foodchain</finalName>
   </build>
 </project>
