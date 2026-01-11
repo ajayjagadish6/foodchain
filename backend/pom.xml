@@ -16,7 +16,6 @@
     <spring.boot.version>3.3.5</spring.boot.version>
 
     <!-- IMPORTANT: set this to your @SpringBootApplication class if auto-detection fails -->
-    <!-- Example: com.foodchain.FoodChainApplication -->
     <start-class>com.foodchain.FoodChainApplication</start-class>
 
     <!-- Library versions (kept here so dependencies don't need explicit versions) -->
@@ -27,6 +26,9 @@
     <springdoc.version>2.6.0</springdoc.version>
     <jjwt.version>0.12.6</jjwt.version>
     <testcontainers.version>1.20.4</testcontainers.version>
+
+    <!-- Cloud SQL SocketFactory for MySQL Connector/J 8 -->
+    <cloudsql.socketfactory.version>1.20.2</cloudsql.socketfactory.version>
   </properties>
 
   <dependencyManagement>
@@ -60,6 +62,13 @@
         <groupId>com.google.firebase</groupId>
         <artifactId>firebase-admin</artifactId>
         <version>${firebase.admin.version}</version>
+      </dependency>
+
+      <!-- Cloud SQL SocketFactory (needed for com.google.cloud.sql.mysql.SocketFactory) -->
+      <dependency>
+        <groupId>com.google.cloud.sql</groupId>
+        <artifactId>mysql-socket-factory-connector-j-8</artifactId>
+        <version>${cloudsql.socketfactory.version}</version>
       </dependency>
 
       <!-- JWT + OpenAPI versions -->
@@ -128,10 +137,11 @@
       <artifactId>mysql-connector-j</artifactId>
       <scope>runtime</scope>
     </dependency>
+
+    <!-- Cloud SQL SocketFactory for Connector/J 8 (REQUIRED for socketFactory=com.google.cloud.sql.mysql.SocketFactory) -->
     <dependency>
       <groupId>com.google.cloud.sql</groupId>
       <artifactId>mysql-socket-factory-connector-j-8</artifactId>
-      <version>1.20.2</version>
     </dependency>
 
     <!-- Optional integrations -->
