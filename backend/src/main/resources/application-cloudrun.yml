@@ -1,10 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-    # Cloud SQL MySQL via Unix domain socket on Cloud Run
-    # IMPORTANT: Cloud Run must be deployed with --add-cloudsql-instances <connection_name>
-    url: ${DB_URL:jdbc:mysql://localhost:3306/${DB_NAME:foodchain-db}?unix_socket=/cloudsql/${CLOUD_SQL_CONNECTION_NAME}&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    url: jdbc:mysql://google/${DB_NAME:foodchain-db}?cloudSqlInstance=${CLOUD_SQL_CONNECTION_NAME}&socketFactory=com.google.cloud.sql.mysql.SocketFactory&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:foodchain}
     password: ${DB_PASSWORD:}
 
