@@ -131,6 +131,12 @@
       <artifactId>flyway-core</artifactId>
     </dependency>
 
+    <!-- REQUIRED for Flyway to support MySQL 8.x with Flyway 10+ -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
+    </dependency>
+
     <!-- MySQL -->
     <dependency>
       <groupId>com.mysql</groupId>
