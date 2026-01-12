@@ -51,8 +51,7 @@ jobs:
             --source . \
             --allow-unauthenticated \
             --add-cloudsql-instances "${CLOUD_SQL_CONNECTION_NAME}" \
-            --set-env-vars "SPRING_PROFILES_ACTIVE=cloudrun,DB_NAME=${DB_NAME},DB_USER=${DB_USER},DB_PASSWORD=${{ secrets.DB_PASSWORD }},CLOUD_SQL_CONNECTION_NAME=${CLOUD_SQL_CONNECTION_NAME},JWT_SECRET=${{ secrets.JWT_SECRET }},FCM_ENABLED=false,SMS_ENABLED=false,REALTIME_BUS=inmemory" \
-            --set-env-vars "PORT=8080"
+            --set-env-vars "SPRING_PROFILES_ACTIVE=cloudrun,DB_NAME=${DB_NAME},DB_USER=${DB_USER},DB_PASSWORD=${{ secrets.DB_PASSWORD }},CLOUD_SQL_CONNECTION_NAME=${CLOUD_SQL_CONNECTION_NAME},JWT_SECRET=${{ secrets.JWT_SECRET }},FCM_ENABLED=false,SMS_ENABLED=false,REALTIME_BUS=inmemory"
 
       - name: Show service URL
         run: |
