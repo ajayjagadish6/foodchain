@@ -1,0 +1,63 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      GCP_PROJECT_ID: confident-pen-482921-b3
+      GCP_REGION: us-west1
+      CLOUD_RUN_SERVICE: foodchain
+      CLOUD_SQL_CONNECTION_NAME: confident-pen-482921-b3:us-west1:foodchain-db
+      DB_NAME: foodchain-db
+      DB_USER: foodchain
+      # Your Cloud Run public URL (used for frontend env example / reference)
+      CLOUD_RUN_URL: https://foodchain-469834444174.us-west1.run.app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      # Optional: prints versions for debugging
+      - name: gcloud info
+        run: |
+          gcloud --version
+          gcloud config list
+
+      # Deploy from source (Cloud Build builds the container)
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "${CLOUD_RUN_SERVICE}" \
+            --project "${GCP_PROJECT_ID}" \
+            --region "${GCP_REGION}" \
+            --source . \
+            --allow-unauthenticated \
+            --add-cloudsql-instances "${CLOUD_SQL_CONNECTION_NAME}" \
+            --set-env-vars "SPRING_PROFILES_ACTIVE=cloudrun,DB_NAME=${DB_NAME},DB_USER=${DB_USER},DB_PASSWORD=${{ secrets.DB_PASSWORD }},CLOUD_SQL_CONNECTION_NAME=${CLOUD_SQL_CONNECTION_NAME},JWT_SECRET=${{ secrets.JWT_SECRET }},FCM_ENABLED=false,SMS_ENABLED=false,REALTIME_BUS=inmemory" \
+            --set-env-vars "PORT=8080"
+
+      - name: Show service URL
+        run: |
+          echo "Deployed. Service URL:"
+          gcloud run services describe "${CLOUD_RUN_SERVICE}" \
+            --project "${GCP_PROJECT_ID}" \
+            --region "${GCP_REGION}" \
+            --format="value(status.url)"
