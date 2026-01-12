@@ -10,6 +10,10 @@ spring:
 
 # Defaults for local/dev. Cloud Run uses application-cloudrun.yml via profile "cloudrun".
 foodchain:
+  cleanup:
+    # Daily at 2:00 AM server time (Cloud Run default is UTC unless you set TZ)
+    cron: "0 0 2 * * *"
+
   security:
     jwtSecret: ${JWT_SECRET:CHANGE_ME_TO_A_LONG_RANDOM_SECRET_32CHARS_MIN}
     jwtIssuer: foodchain
