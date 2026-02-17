@@ -23,7 +23,7 @@ RUN mvn -f backend/pom.xml -q -DskipTests package
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 ENV JAVA_OPTS=""
-# Cloud Run provides PORT
+# Linux VM default runtime port
 ENV PORT=8080
 COPY --from=backend-build /app/backend/target/foodchain.jar /app/foodchain.jar
 EXPOSE 8080

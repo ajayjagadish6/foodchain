@@ -27,8 +27,6 @@
     <jjwt.version>0.12.6</jjwt.version>
     <testcontainers.version>1.20.4</testcontainers.version>
 
-    <!-- Cloud SQL SocketFactory for MySQL Connector/J 8 -->
-    <cloudsql.socketfactory.version>1.25.1</cloudsql.socketfactory.version>
   </properties>
 
   <dependencyManagement>
@@ -62,13 +60,6 @@
         <groupId>com.google.firebase</groupId>
         <artifactId>firebase-admin</artifactId>
         <version>${firebase.admin.version}</version>
-      </dependency>
-
-      <!-- Cloud SQL SocketFactory (needed for com.google.cloud.sql.mysql.SocketFactory) -->
-      <dependency>
-        <groupId>com.google.cloud.sql</groupId>
-        <artifactId>mysql-socket-factory-connector-j-8</artifactId>
-        <version>${cloudsql.socketfactory.version}</version>
       </dependency>
 
       <!-- JWT + OpenAPI versions -->
@@ -144,12 +135,6 @@
       <scope>runtime</scope>
     </dependency>
 
-    <!-- Cloud SQL SocketFactory for Connector/J 8 (REQUIRED for socketFactory=com.google.cloud.sql.mysql.SocketFactory) -->
-    <dependency>
-      <groupId>com.google.cloud.sql</groupId>
-      <artifactId>mysql-socket-factory-connector-j-8</artifactId>
-    </dependency>
-
     <!-- Optional integrations -->
     <dependency>
       <groupId>com.google.firebase</groupId>
@@ -204,6 +189,11 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

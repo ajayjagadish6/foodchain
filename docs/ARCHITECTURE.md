@@ -2,40 +2,43 @@
 
 ## Overview
 
-FoodChain is shipped as a **single Cloud Run container**:
+FoodChain is deployed as a single Linux VM workload:
 - Spring Boot serves:
   - `/api/**` REST API
-  - `/api/stream/**` SSE streams (status/location/task notifications)
+  - `/api/stream/**` SSE streams
   - static UI assets (React build) at `/`
+- MySQL 8 runs locally on the same VM
+- Nginx proxies `:80` to app `:8080`
 
 ## Realtime design
 
-MVP uses in-memory `RealtimeHub` and SSE. This works great:
-- locally
-- in a single-instance Cloud Run service
+MVP realtime uses SSE + in-memory event fanout (`REALTIME_BUS=inmemory`).
 
-For multi-instance Cloud Run scaling:
-- in-memory hubs won't broadcast across instances
-- you should replace the hub with a shared bus:
-  - Google Cloud Pub/Sub (per-instance subscriptions) OR in-memory for single instance
-  - Google Pub/Sub
-  - or a managed websocket gateway
+This is appropriate for:
+- local development
+- single-instance VM deployments
+
+If you move to multi-instance later, use a shared bus implementation (for example Redis Pub/Sub) so events fan out across instances.
 
 ## Security
+
 - JWT Bearer tokens for API calls
-- For SSE, the browser `EventSource` can’t set headers, so the MVP accepts `?token=...` query param.
-  - Recommended upgrade: cookie-based session OR SSE-over-fetch with Authorization header.
+- SSE currently accepts `?token=...` because browser `EventSource` cannot send custom Authorization headers
 
 ## Matching
+
 `MatchingService` attempts matches on each donation/request creation:
 - category must match
 - distance must be within configurable radius
 - nearest match wins
-- creates a Delivery task with lifecycle:
-  - CREATED → CLAIMED → PICKED_UP → DELIVERED
+- creates a Delivery task lifecycle:
+  - `CREATED -> CLAIMED -> PICKED_UP -> DELIVERED`
 
-## Row-level authorization
-Delivery detail and delivery SSE streams are protected so only the donor, recipient, assigned driver, or an admin can access them.
+## Authorization
 
-## Push notifications (FCM)
-Optional Web Push notifications are sent via Firebase Cloud Messaging when enabled on the backend.
+Delivery detail endpoints and delivery SSE streams are protected so only donor, recipient, assigned driver, or admin can access them.
+
+## Optional notifications
+
+- SMS via Twilio
+- Web Push via Firebase Cloud Messaging

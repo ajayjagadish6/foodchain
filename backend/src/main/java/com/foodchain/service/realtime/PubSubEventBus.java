@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Pub/Sub-based event fanout across Cloud Run instances.
+ * Pub/Sub-based event fanout across multiple app instances.
  *
  * Important: To ensure EACH instance receives ALL events, we create a PER-INSTANCE subscription
  * (name includes HOSTNAME). The subscription is configured with an expiration policy to reduce leaks.
