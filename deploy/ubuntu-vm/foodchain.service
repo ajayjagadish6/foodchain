@@ -1,0 +1,17 @@
+[Unit]
+Description=FoodChain Spring Boot service
+After=network.target
+
+[Service]
+Type=simple
+User=foodchain
+Group=foodchain
+WorkingDirectory=/opt/foodchain/current
+EnvironmentFile=/etc/foodchain/foodchain.env
+ExecStart=/usr/bin/java -jar /opt/foodchain/current/backend/target/foodchain.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

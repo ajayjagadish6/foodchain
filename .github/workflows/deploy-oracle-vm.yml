@@ -49,7 +49,7 @@ jobs:
             git reset --hard "origin/main"
 
             if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
-              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" JWT_SECRET="${JWT_SECRET}" bash deploy/oracle-vm/deploy.sh
+              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" JWT_SECRET="${JWT_SECRET}" bash deploy/ubuntu-vm/deploy.sh
             else
-              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" JWT_SECRET="${JWT_SECRET}" bash deploy/oracle-vm/deploy.sh
+              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" JWT_SECRET="${JWT_SECRET}" bash deploy/ubuntu-vm/deploy.sh
             fi

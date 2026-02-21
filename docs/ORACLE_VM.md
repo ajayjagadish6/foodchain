@@ -30,7 +30,7 @@ Set required secrets for first deploy:
 ```bash
 export MYSQL_APP_PASSWORD='replace-this-db-password'
 export JWT_SECRET='replace-this-with-a-long-random-secret'
-sudo -E bash deploy/oracle-vm/deploy.sh
+sudo -E bash deploy/ubuntu-vm/deploy.sh
 ```
 
 If your MySQL install requires root password auth, also export:
@@ -72,7 +72,7 @@ Runtime environment file:
 - `/etc/foodchain/foodchain.env`
 
 Template source:
-- `deploy/oracle-vm/foodchain.env.example`
+- `deploy/ubuntu-vm/foodchain.env.example`
 
 After editing env values:
 
@@ -88,7 +88,7 @@ On VM inside repo:
 git pull
 export MYSQL_APP_PASSWORD='existing-db-password'
 export JWT_SECRET='existing-jwt-secret'
-sudo -E bash deploy/oracle-vm/deploy.sh
+sudo -E bash deploy/ubuntu-vm/deploy.sh
 ```
 
 ## 7) GitHub Actions auto-deploy

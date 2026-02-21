@@ -16,7 +16,7 @@ This repository is now optimized for a single Linux VM deployment pattern:
 - Spring Boot app runs as a `systemd` service
 - Nginx reverse-proxies port `80` to the app on `127.0.0.1:8080`
 
-Deployment assets are in `deploy/oracle-vm`.
+Deployment assets are in `deploy/ubuntu-vm` (Ubuntu-first) and `deploy/oracle-vm` (compatible).
 
 ## Quick start (local dev)
 
@@ -57,7 +57,7 @@ Minimal flow after cloning the repo on your VM:
 cd /path/to/foodchain
 export MYSQL_APP_PASSWORD='replace-this-db-password'
 export JWT_SECRET='replace-this-with-a-long-random-secret'
-sudo -E bash deploy/oracle-vm/deploy.sh
+sudo -E bash deploy/ubuntu-vm/deploy.sh
 ```
 
 For push-to-deploy from GitHub, use `.github/workflows/deploy-oracle-vm.yml` and set the required repository secrets documented in `docs/ORACLE_VM.md`.
@@ -81,7 +81,7 @@ Password for all: `demo1234`
 - `FCM_ENABLED`, `FCM_SERVICE_ACCOUNT_BASE64`
 - `REALTIME_BUS` (default `inmemory`)
 
-Example runtime env file: `deploy/oracle-vm/foodchain.env.example`
+Example runtime env file: `deploy/ubuntu-vm/foodchain.env.example`
 
 ## Project layout
 
@@ -90,7 +90,7 @@ Example runtime env file: `deploy/oracle-vm/foodchain.env.example`
 ├── backend/
 ├── frontend/
 ├── docker-compose.yml
-├── deploy/oracle-vm/
+├── deploy/ubuntu-vm/
 └── docs/
 ```
 
