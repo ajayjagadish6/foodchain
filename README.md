@@ -7,12 +7,12 @@ FoodChain is a web platform that matches surplus food donations to nearby reques
 - Backend: Java 21 + Spring Boot (REST API, JWT auth, Flyway)
 - Database: MySQL 8 (local MySQL server on Linux VM)
 - Frontend: React + Vite + Material UI
-- Hosting target: Oracle Cloud Infrastructure (OCI) Linux VM
+- Hosting target: Oracle Cloud Infrastructure (OCI) Linux VM (Ubuntu 24 or Oracle Linux)
 
 ## Production deployment target
 
 This repository is now optimized for a single Linux VM deployment pattern:
-- MySQL runs locally on the VM (`mysqld`)
+- MySQL runs locally on the VM (`mysql` on Ubuntu, `mysqld` on Oracle Linux)
 - Spring Boot app runs as a `systemd` service
 - Nginx reverse-proxies port `80` to the app on `127.0.0.1:8080`
 

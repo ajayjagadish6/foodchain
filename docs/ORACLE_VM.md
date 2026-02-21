@@ -1,4 +1,4 @@
-# Deploying FoodChain on Oracle Cloud VM (Linux + local MySQL)
+# Deploying FoodChain on Oracle Cloud VM (Ubuntu 24 or Oracle Linux + local MySQL)
 
 This guide deploys FoodChain onto one OCI Linux VM with:
 - MySQL server on the same VM
@@ -9,7 +9,7 @@ This guide deploys FoodChain onto one OCI Linux VM with:
 
 Recommended minimum for a small environment:
 - Shape: 2 OCPU / 8 GB RAM (or higher)
-- OS: Oracle Linux 9
+- OS: Ubuntu 24.04 LTS (recommended) or Oracle Linux 9
 - Public IP attached
 
 Open inbound Security List / NSG rules for:
@@ -45,6 +45,10 @@ What the script does:
 - Builds frontend + backend jar
 - Installs and starts `foodchain.service` and Nginx
 - Writes runtime env file at `/etc/foodchain/foodchain.env` if missing
+
+The script auto-detects distro and uses:
+- `apt` + `mysql` service on Ubuntu
+- `dnf` + `mysqld` service on Oracle Linux
 
 ## 4) Verify
 

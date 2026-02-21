@@ -15,10 +15,11 @@ APP_ROOT="/opt/foodchain"
 ENV_DIR="/etc/foodchain"
 ENV_FILE="${ENV_DIR}/foodchain.env"
 SYSTEMD_UNIT="/etc/systemd/system/foodchain.service"
-NGINX_CONF="/etc/nginx/conf.d/foodchain.conf"
 RELEASE_TS="$(date +%Y%m%d%H%M%S)"
 REPO_SOURCE="${REPO_SOURCE:-$(pwd)}"
 RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_TS}"
+MYSQL_SERVICE="mysql"
+NOGLOGIN_BIN="/usr/sbin/nologin"
 
 if [[ ! -f "${REPO_SOURCE}/backend/pom.xml" || ! -f "${REPO_SOURCE}/frontend/package.json" ]]; then
   echo "REPO_SOURCE must point to the FoodChain repository root."
@@ -26,18 +27,29 @@ if [[ ! -f "${REPO_SOURCE}/backend/pom.xml" || ! -f "${REPO_SOURCE}/frontend/pac
 fi
 
 echo "Installing system dependencies..."
-dnf -y install oracle-epel-release-el9 >/dev/null 2>&1 || true
-dnf -y module enable nodejs:20 >/dev/null 2>&1 || true
-dnf -y install git rsync nginx mysql-server java-21-openjdk-headless java-21-openjdk-devel maven nodejs
+if command -v apt-get >/dev/null 2>&1; then
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update
+  apt-get install -y git rsync nginx mysql-server openjdk-21-jdk maven nodejs npm curl
+  MYSQL_SERVICE="mysql"
+else
+  dnf -y install oracle-epel-release-el9 >/dev/null 2>&1 || true
+  dnf -y module enable nodejs:20 >/dev/null 2>&1 || true
+  dnf -y install git rsync nginx mysql-server java-21-openjdk-headless java-21-openjdk-devel maven nodejs
+  MYSQL_SERVICE="mysqld"
+  if [[ ! -x "${NOGLOGIN_BIN}" ]] && command -v /sbin/nologin >/dev/null 2>&1; then
+    NOGLOGIN_BIN="/sbin/nologin"
+  fi
+fi
 
 if ! id -u "${APP_USER}" >/dev/null 2>&1; then
-  useradd --system --home-dir "${APP_ROOT}" --shell /sbin/nologin "${APP_USER}"
+  useradd --system --home-dir "${APP_ROOT}" --shell "${NOGLOGIN_BIN}" "${APP_USER}"
 fi
 
 mkdir -p "${APP_ROOT}/releases" "${ENV_DIR}"
 chown -R "${APP_USER}:${APP_GROUP}" "${APP_ROOT}"
 
-systemctl enable --now mysqld
+systemctl enable --now "${MYSQL_SERVICE}"
 
 MYSQL_CMD=(mysql -uroot)
 if ! "${MYSQL_CMD[@]}" -e "SELECT 1" >/dev/null 2>&1; then
@@ -93,7 +105,16 @@ chown -h "${APP_USER}:${APP_GROUP}" "${APP_ROOT}/current"
 chown -R "${APP_USER}:${APP_GROUP}" "${RELEASE_DIR}"
 
 install -m 0644 "${REPO_SOURCE}/deploy/oracle-vm/foodchain.service" "${SYSTEMD_UNIT}"
-install -m 0644 "${REPO_SOURCE}/deploy/oracle-vm/nginx-foodchain.conf" "${NGINX_CONF}"
+if [[ -d /etc/nginx/conf.d ]]; then
+  install -m 0644 "${REPO_SOURCE}/deploy/oracle-vm/nginx-foodchain.conf" "/etc/nginx/conf.d/foodchain.conf"
+elif [[ -d /etc/nginx/sites-available ]]; then
+  install -m 0644 "${REPO_SOURCE}/deploy/oracle-vm/nginx-foodchain.conf" "/etc/nginx/sites-available/foodchain.conf"
+  ln -sfn /etc/nginx/sites-available/foodchain.conf /etc/nginx/sites-enabled/foodchain.conf
+  rm -f /etc/nginx/sites-enabled/default
+else
+  echo "Unable to locate nginx config directory."
+  exit 1
+fi
 
 systemctl daemon-reload
 systemctl enable --now foodchain
@@ -104,6 +125,8 @@ systemctl restart nginx
 if command -v firewall-cmd >/dev/null 2>&1; then
   firewall-cmd --permanent --add-service=http >/dev/null 2>&1 || true
   firewall-cmd --reload >/dev/null 2>&1 || true
+elif command -v ufw >/dev/null 2>&1; then
+  ufw allow 80/tcp >/dev/null 2>&1 || true
 fi
 
 sleep 2

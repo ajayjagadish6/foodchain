@@ -1,7 +1,6 @@
 [Unit]
 Description=FoodChain Spring Boot service
-After=network.target mysqld.service
-Wants=mysqld.service
+After=network.target
 
 [Service]
 Type=simple
