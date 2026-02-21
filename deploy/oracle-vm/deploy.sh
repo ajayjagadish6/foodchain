@@ -92,10 +92,19 @@ rsync -a --delete \
   "${REPO_SOURCE}/" "${RELEASE_DIR}/"
 
 pushd "${RELEASE_DIR}/frontend" >/dev/null
+NPM_INSTALL_ARGS=(--no-audit --no-fund --progress=false)
 if [[ -f package-lock.json ]]; then
-  npm ci
+  if ! timeout 20m npm ci "${NPM_INSTALL_ARGS[@]}"; then
+    echo "npm ci failed or timed out; retrying once after cache cleanup..."
+    npm cache verify || true
+    timeout 20m npm ci "${NPM_INSTALL_ARGS[@]}"
+  fi
 else
-  npm install
+  if ! timeout 20m npm install "${NPM_INSTALL_ARGS[@]}"; then
+    echo "npm install failed or timed out; retrying once after cache cleanup..."
+    npm cache verify || true
+    timeout 20m npm install "${NPM_INSTALL_ARGS[@]}"
+  fi
 fi
 npm run build
 popd >/dev/null
