@@ -92,7 +92,11 @@ rsync -a --delete \
   "${REPO_SOURCE}/" "${RELEASE_DIR}/"
 
 pushd "${RELEASE_DIR}/frontend" >/dev/null
-npm ci
+if [[ -f package-lock.json ]]; then
+  npm ci
+else
+  npm install
+fi
 npm run build
 popd >/dev/null
 
