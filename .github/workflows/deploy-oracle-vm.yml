@@ -13,7 +13,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy over SSH
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund --progress=false
+          else
+            npm install --no-audit --no-fund --progress=false
+          fi
+          npm run build
+
+      - name: Build backend jar with bundled frontend
+        run: |
+          rm -rf backend/src/main/resources/static
+          mkdir -p backend/src/main/resources/static
+          cp -R frontend/dist/. backend/src/main/resources/static/
+          mvn -f backend/pom.xml -DskipTests package
+          cp backend/target/foodchain.jar foodchain.jar
+
+      - name: Upload jar to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.OCI_VM_HOST }}
+          username: ${{ secrets.OCI_VM_USER }}
+          key: ${{ secrets.OCI_VM_SSH_KEY }}
+          port: ${{ secrets.OCI_VM_SSH_PORT || 22 }}
+          source: foodchain.jar
+          target: /tmp
+
+      - name: Deploy prebuilt jar over SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
           MYSQL_APP_PASSWORD: ${{ secrets.MYSQL_APP_PASSWORD }}
@@ -49,7 +92,7 @@ jobs:
             git reset --hard "origin/main"
 
             if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
-              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" JWT_SECRET="${JWT_SECRET}" bash deploy/ubuntu-vm/deploy.sh
+              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" JWT_SECRET="${JWT_SECRET}" PREBUILT_JAR="/tmp/foodchain.jar" bash deploy/ubuntu-vm/deploy.sh
             else
-              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" JWT_SECRET="${JWT_SECRET}" bash deploy/ubuntu-vm/deploy.sh
+              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" JWT_SECRET="${JWT_SECRET}" PREBUILT_JAR="/tmp/foodchain.jar" bash deploy/ubuntu-vm/deploy.sh
             fi

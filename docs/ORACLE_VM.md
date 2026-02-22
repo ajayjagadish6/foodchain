@@ -96,6 +96,12 @@ sudo -E bash deploy/ubuntu-vm/deploy.sh
 Workflow file:
 - `.github/workflows/deploy-oracle-vm.yml`
 
+How CI deploy works now:
+- Builds frontend and backend jar in GitHub Actions runner
+- Uploads prebuilt `foodchain.jar` to VM at `/tmp/foodchain.jar`
+- Runs `deploy/ubuntu-vm/deploy.sh` with `PREBUILT_JAR=/tmp/foodchain.jar`
+- VM skips npm/maven build during deploy in this mode
+
 Required GitHub repository secrets:
 - `OCI_VM_HOST`
 - `OCI_VM_USER`

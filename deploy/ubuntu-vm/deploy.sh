@@ -20,6 +20,16 @@ REPO_SOURCE="${REPO_SOURCE:-$(pwd)}"
 RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_TS}"
 MYSQL_SERVICE="mysql"
 NOGLOGIN_BIN="/usr/sbin/nologin"
+PREBUILT_JAR="${PREBUILT_JAR:-}"
+USE_PREBUILT=false
+
+if [[ -n "${PREBUILT_JAR}" ]]; then
+  if [[ ! -f "${PREBUILT_JAR}" ]]; then
+    echo "PREBUILT_JAR is set but file not found: ${PREBUILT_JAR}"
+    exit 1
+  fi
+  USE_PREBUILT=true
+fi
 
 if [[ ! -f "${REPO_SOURCE}/backend/pom.xml" || ! -f "${REPO_SOURCE}/frontend/package.json" ]]; then
   echo "REPO_SOURCE must point to the FoodChain repository root."
@@ -30,12 +40,22 @@ echo "Installing system dependencies..."
 if command -v apt-get >/dev/null 2>&1; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
-  apt-get install -y git rsync nginx mysql-server openjdk-21-jdk maven nodejs npm curl
+  APT_PACKAGES=(git rsync nginx mysql-server openjdk-21-jdk curl)
+  if [[ "${USE_PREBUILT}" != "true" ]]; then
+    APT_PACKAGES+=(maven nodejs npm)
+  fi
+  apt-get install -y "${APT_PACKAGES[@]}"
   MYSQL_SERVICE="mysql"
 else
   dnf -y install oracle-epel-release-el9 >/dev/null 2>&1 || true
-  dnf -y module enable nodejs:20 >/dev/null 2>&1 || true
-  dnf -y install git rsync nginx mysql-server java-21-openjdk-headless java-21-openjdk-devel maven nodejs
+  if [[ "${USE_PREBUILT}" != "true" ]]; then
+    dnf -y module enable nodejs:20 >/dev/null 2>&1 || true
+  fi
+  DNF_PACKAGES=(git rsync nginx mysql-server java-21-openjdk-headless java-21-openjdk-devel curl)
+  if [[ "${USE_PREBUILT}" != "true" ]]; then
+    DNF_PACKAGES+=(maven nodejs)
+  fi
+  dnf -y install "${DNF_PACKAGES[@]}"
   MYSQL_SERVICE="mysqld"
   if [[ ! -x "${NOGLOGIN_BIN}" ]] && command -v /sbin/nologin >/dev/null 2>&1; then
     NOGLOGIN_BIN="/sbin/nologin"
@@ -91,27 +111,33 @@ rsync -a --delete \
   --exclude 'frontend/node_modules' \
   "${REPO_SOURCE}/" "${RELEASE_DIR}/"
 
-pushd "${RELEASE_DIR}/frontend" >/dev/null
-NPM_INSTALL_ARGS=(--no-audit --no-fund --progress=false)
-if [[ -f package-lock.json ]]; then
-  if ! timeout 20m npm ci "${NPM_INSTALL_ARGS[@]}"; then
-    echo "npm ci failed or timed out; retrying once after cache cleanup..."
-    npm cache verify || true
-    timeout 20m npm ci "${NPM_INSTALL_ARGS[@]}"
-  fi
+if [[ "${USE_PREBUILT}" == "true" ]]; then
+  echo "Using prebuilt jar: ${PREBUILT_JAR}"
+  mkdir -p "${RELEASE_DIR}/backend/target"
+  cp "${PREBUILT_JAR}" "${RELEASE_DIR}/backend/target/foodchain.jar"
 else
-  if ! timeout 20m npm install "${NPM_INSTALL_ARGS[@]}"; then
-    echo "npm install failed or timed out; retrying once after cache cleanup..."
-    npm cache verify || true
-    timeout 20m npm install "${NPM_INSTALL_ARGS[@]}"
+  pushd "${RELEASE_DIR}/frontend" >/dev/null
+  NPM_INSTALL_ARGS=(--no-audit --no-fund --progress=false)
+  if [[ -f package-lock.json ]]; then
+    if ! timeout 20m npm ci "${NPM_INSTALL_ARGS[@]}"; then
+      echo "npm ci failed or timed out; retrying once after cache cleanup..."
+      npm cache verify || true
+      timeout 20m npm ci "${NPM_INSTALL_ARGS[@]}"
+    fi
+  else
+    if ! timeout 20m npm install "${NPM_INSTALL_ARGS[@]}"; then
+      echo "npm install failed or timed out; retrying once after cache cleanup..."
+      npm cache verify || true
+      timeout 20m npm install "${NPM_INSTALL_ARGS[@]}"
+    fi
   fi
-fi
-npm run build
-popd >/dev/null
+  npm run build
+  popd >/dev/null
 
-pushd "${RELEASE_DIR}/backend" >/dev/null
-mvn -DskipTests package
-popd >/dev/null
+  pushd "${RELEASE_DIR}/backend" >/dev/null
+  mvn -DskipTests package
+  popd >/dev/null
+fi
 
 ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
 chown -h "${APP_USER}:${APP_GROUP}" "${APP_ROOT}/current"
