@@ -117,6 +117,38 @@ Optional secrets:
 VM requirement for non-interactive deploy from CI:
 - user in `OCI_VM_USER` must be allowed to run deploy script with `sudo` without interactive password prompt.
 
+## 8) Manual prebuilt deploy from your local machine
+
+Script:
+- `deploy/ubuntu-vm/deploy-prebuilt-local.sh`
+
+This is useful when VM network is slow for npm packages.
+It builds frontend/backend locally, uploads `foodchain.jar` to VM, and triggers deploy using `PREBUILT_JAR`.
+
+Required local environment variables before running:
+- `OCI_VM_HOST`
+- `OCI_VM_USER`
+- `OCI_VM_SSH_KEY` (path to private key file)
+- `MYSQL_APP_PASSWORD`
+- `JWT_SECRET`
+
+Optional:
+- `OCI_VM_SSH_PORT` (default `22`)
+- `MYSQL_ROOT_PASSWORD`
+- `OCI_REPO_DIR` (default `/opt/foodchain-src`)
+- `OCI_REPO_URL` (default git origin URL of your local repo)
+
+Example:
+
+```bash
+export OCI_VM_HOST='1.2.3.4'
+export OCI_VM_USER='ubuntu'
+export OCI_VM_SSH_KEY="$HOME/.ssh/oci-vm.key"
+export MYSQL_APP_PASSWORD='replace-this-db-password'
+export JWT_SECRET='replace-this-with-a-long-random-secret'
+bash deploy/ubuntu-vm/deploy-prebuilt-local.sh
+```
+
 ## Notes
 
 - Current deploy script is HTTP-only by default. Add TLS (Let's Encrypt or OCI Load Balancer) for production internet traffic.

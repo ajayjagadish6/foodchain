@@ -62,6 +62,7 @@ sudo -E bash deploy/ubuntu-vm/deploy.sh
 
 For push-to-deploy from GitHub, use `.github/workflows/deploy-oracle-vm.yml` and set the required repository secrets documented in `docs/ORACLE_VM.md`.
 This workflow builds the jar in GitHub Actions and deploys the prebuilt artifact to the VM, so VM-side npm/maven build time is avoided.
+For manual prebuilt deploy (build local, upload jar, deploy remotely), use `deploy/ubuntu-vm/deploy-prebuilt-local.sh`.
 
 ## Demo users
 
