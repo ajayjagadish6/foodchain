@@ -92,46 +92,50 @@ jobs:
           key: ${{ secrets.OCI_VM_SSH_KEY }}
           port: ${{ secrets.OCI_VM_SSH_PORT || 22 }}
           envs: MYSQL_APP_PASSWORD,MYSQL_ROOT_PASSWORD,JWT_SECRET,REPO_URL,REPO_DIR
-          request_pty: true
           script_stop: true
           script: |
+            # Redirect ALL stderr to stdout for this entire shell session.
+            # drone-ssh only forwards the SSH stdout channel; any error that
+            # goes to stderr is silently discarded.  exec 2>&1 fixes that at
+            # the OS level so nothing can escape the log.
+            exec 2>&1
             set -eo pipefail
 
-            # Validate secrets arrived non-empty
-            if [ -z "${MYSQL_APP_PASSWORD:-}" ]; then
-              echo "ERROR: MYSQL_APP_PASSWORD is empty."
-              exit 1
-            fi
-            if [ -z "${JWT_SECRET:-}" ]; then
-              echo "ERROR: JWT_SECRET is empty."
-              exit 1
-            fi
+            echo "==[1]== secrets check"
+            [ -z "${MYSQL_APP_PASSWORD:-}" ] && { echo "FATAL: MYSQL_APP_PASSWORD is empty"; exit 1; }
+            [ -z "${JWT_SECRET:-}" ]         && { echo "FATAL: JWT_SECRET is empty"; exit 1; }
+            echo "==[1]== OK"
 
+            echo "==[2]== repo sync"
             REPO_URL="${REPO_URL:-https://github.com/${{ github.repository }}.git}"
             REPO_DIR="${REPO_DIR:-/opt/foodchain-src}"
-
             if [ ! -d "${REPO_DIR}/.git" ]; then
               mkdir -p "${REPO_DIR}"
               git clone "${REPO_URL}" "${REPO_DIR}"
             fi
-
             cd "${REPO_DIR}"
             git fetch --prune origin
             git checkout main
             git reset --hard "origin/main"
+            echo "==[2]== OK — $(git rev-parse --short HEAD)"
 
-            # 2>&1 merges stderr into stdout so all output appears in the Actions log
+            echo "==[3]== sudo smoke test"
+            sudo -n id || { echo "FATAL: sudo requires a password or is not configured"; exit 1; }
+            echo "==[3]== OK — running as $(sudo id -un)"
+
+            echo "==[4]== deploy.sh"
             if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
                 PREBUILT_JAR="/tmp/foodchain.jar" \
-                bash deploy/ubuntu-vm/deploy.sh 2>&1
+                bash deploy/ubuntu-vm/deploy.sh
             else
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
                 PREBUILT_JAR="/tmp/foodchain.jar" \
-                bash deploy/ubuntu-vm/deploy.sh 2>&1
+                bash deploy/ubuntu-vm/deploy.sh
             fi
+            echo "==[4]== deploy complete"
