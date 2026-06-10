@@ -168,8 +168,23 @@ elif command -v ufw >/dev/null 2>&1; then
   ufw allow 80/tcp >/dev/null 2>&1 || true
 fi
 
-sleep 2
-curl -fsS "http://127.0.0.1:8080/actuator/health" >/dev/null
+echo "Waiting for application to become healthy (up to 90 s)..."
+HEALTH_OK=false
+for i in $(seq 1 45); do
+  if curl -fsS "http://127.0.0.1:8080/actuator/health" >/dev/null 2>&1; then
+    HEALTH_OK=true
+    break
+  fi
+  sleep 2
+done
+
+if [[ "${HEALTH_OK}" != "true" ]]; then
+  echo "Application did not become healthy within 90 seconds."
+  echo "--- Last 60 lines from journalctl ---"
+  journalctl -u foodchain --no-pager -n 60 2>/dev/null || true
+  echo "--- End of logs ---"
+  exit 1
+fi
 
 echo "Deployment complete."
 echo "- app dir: ${APP_ROOT}/current"

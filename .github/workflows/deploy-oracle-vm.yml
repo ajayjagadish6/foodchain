@@ -16,6 +16,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ── Fail fast if required secrets are missing ──────────────────────────
+      - name: Validate required secrets
+        env:
+          OCI_VM_HOST:        ${{ secrets.OCI_VM_HOST }}
+          OCI_VM_USER:        ${{ secrets.OCI_VM_USER }}
+          OCI_VM_SSH_KEY:     ${{ secrets.OCI_VM_SSH_KEY }}
+          MYSQL_APP_PASSWORD: ${{ secrets.MYSQL_APP_PASSWORD }}
+          JWT_SECRET:         ${{ secrets.JWT_SECRET }}
+        run: |
+          MISSING=""
+          [ -z "${OCI_VM_HOST}"        ] && MISSING="${MISSING} OCI_VM_HOST"
+          [ -z "${OCI_VM_USER}"        ] && MISSING="${MISSING} OCI_VM_USER"
+          [ -z "${OCI_VM_SSH_KEY}"     ] && MISSING="${MISSING} OCI_VM_SSH_KEY"
+          [ -z "${MYSQL_APP_PASSWORD}" ] && MISSING="${MISSING} MYSQL_APP_PASSWORD"
+          [ -z "${JWT_SECRET}"         ] && MISSING="${MISSING} JWT_SECRET"
+          if [ -n "${MISSING}" ]; then
+            echo "::error::Required GitHub Actions secrets are not set:${MISSING}"
+            echo "Go to: Settings → Secrets and variables → Actions → New repository secret"
+            exit 1
+          fi
+          echo "All required secrets are present."
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -72,14 +94,20 @@ jobs:
           envs: MYSQL_APP_PASSWORD,MYSQL_ROOT_PASSWORD,JWT_SECRET,REPO_URL,REPO_DIR
           script_stop: true
           script: |
-            set -euo pipefail
+            set -eo pipefail   # no -u: appleboy may pass empty strings for unset secrets
 
-            if [ -z "${REPO_URL:-}" ]; then
-              REPO_URL="https://github.com/${{ github.repository }}.git"
+            # Validate that MYSQL_APP_PASSWORD arrived non-empty
+            if [ -z "${MYSQL_APP_PASSWORD:-}" ]; then
+              echo "ERROR: MYSQL_APP_PASSWORD is empty. Add it as a GitHub Actions secret." >&2
+              exit 1
             fi
-            if [ -z "${REPO_DIR:-}" ]; then
-              REPO_DIR="/opt/foodchain-src"
+            if [ -z "${JWT_SECRET:-}" ]; then
+              echo "ERROR: JWT_SECRET is empty. Add it as a GitHub Actions secret." >&2
+              exit 1
             fi
+
+            REPO_URL="${REPO_URL:-https://github.com/${{ github.repository }}.git}"
+            REPO_DIR="${REPO_DIR:-/opt/foodchain-src}"
 
             if [ ! -d "${REPO_DIR}/.git" ]; then
               mkdir -p "${REPO_DIR}"
@@ -92,7 +120,16 @@ jobs:
             git reset --hard "origin/main"
 
             if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
-              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" JWT_SECRET="${JWT_SECRET}" PREBUILT_JAR="/tmp/foodchain.jar" bash deploy/ubuntu-vm/deploy.sh
+              sudo -E env \
+                MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
+                MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+                JWT_SECRET="${JWT_SECRET}" \
+                PREBUILT_JAR="/tmp/foodchain.jar" \
+                bash deploy/ubuntu-vm/deploy.sh
             else
-              sudo -E env MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" JWT_SECRET="${JWT_SECRET}" PREBUILT_JAR="/tmp/foodchain.jar" bash deploy/ubuntu-vm/deploy.sh
+              sudo -E env \
+                MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
+                JWT_SECRET="${JWT_SECRET}" \
+                PREBUILT_JAR="/tmp/foodchain.jar" \
+                bash deploy/ubuntu-vm/deploy.sh
             fi
