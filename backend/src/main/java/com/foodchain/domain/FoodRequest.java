@@ -45,6 +45,12 @@ public class FoodRequest {
     @Column(name = "day_key", nullable = false)
     private LocalDate dayKey;
 
+    @Column(name = "serving_count")
+    private Integer servingCount;
+
+    @Column(name = "dietary_notes", length = 255)
+    private String dietaryNotes;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) createdAt = Instant.now();
@@ -78,4 +84,10 @@ public class FoodRequest {
     public void setStatus(RequestStatus status) { this.status = status; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setDayKey(LocalDate dayKey) { this.dayKey = dayKey; }
+
+    public Integer getServingCount() { return servingCount; }
+    public String getDietaryNotes() { return dietaryNotes; }
+
+    public void setServingCount(Integer servingCount) { this.servingCount = servingCount; }
+    public void setDietaryNotes(String dietaryNotes) { this.dietaryNotes = dietaryNotes; }
 }

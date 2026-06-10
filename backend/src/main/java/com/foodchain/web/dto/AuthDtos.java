@@ -1,10 +1,7 @@
 package com.foodchain.web.dto;
 
 import com.foodchain.domain.Role;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public class AuthDtos {
 
@@ -18,7 +15,12 @@ public class AuthDtos {
             Role role,
             @NotBlank
             @Pattern(regexp = "^\\+[1-9]\\d{7,14}$", message = "Phone must be in E.164 format, e.g. +14155552671")
-            String phoneNumber
+            String phoneNumber,
+            // Optional organization fields
+            String orgName,
+            String orgAddress,
+            Double orgLat,
+            Double orgLng
     ) {}
 
     public record RegisterResponse(String message) {}
@@ -29,6 +31,13 @@ public class AuthDtos {
     ) {}
 
     public record ResendPhoneRequest(@Email @NotBlank String email) {}
+
+    public record ForgotPasswordRequest(@Email @NotBlank String email) {}
+
+    public record ResetPasswordRequest(
+            @NotBlank String token,
+            @NotBlank @Size(min = 8, max = 72) String newPassword
+    ) {}
 
     public record GenericResponse(String message) {}
 }

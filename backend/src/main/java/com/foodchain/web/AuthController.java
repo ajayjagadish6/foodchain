@@ -4,6 +4,7 @@ import com.foodchain.domain.Role;
 import com.foodchain.domain.User;
 import com.foodchain.repo.UserRepository;
 import com.foodchain.security.JwtService;
+import com.foodchain.service.PasswordResetService;
 import com.foodchain.service.PhoneVerificationService;
 import com.foodchain.web.dto.AuthDtos;
 import jakarta.validation.Valid;
@@ -18,27 +19,27 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final PhoneVerificationService phoneVerificationService;
+    private final PasswordResetService passwordResetService;
 
     public AuthController(
             UserRepository userRepo,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            PhoneVerificationService phoneVerificationService
+            PhoneVerificationService phoneVerificationService,
+            PasswordResetService passwordResetService
     ) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.phoneVerificationService = phoneVerificationService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthDtos.RegisterResponse> register(@Valid @RequestBody AuthDtos.RegisterRequest req) {
         if (req.role() == null) throw new IllegalArgumentException("Role is required");
         if (req.role() == Role.ADMIN) throw new IllegalArgumentException("ADMIN cannot be self-registered");
-
-        if (userRepo.findByEmail(req.email()).isPresent()) {
-            throw new IllegalStateException("Email already registered");
-        }
+        if (userRepo.findByEmail(req.email()).isPresent()) throw new IllegalStateException("Email already registered");
 
         User u = new User();
         u.setEmail(req.email().toLowerCase());
@@ -48,10 +49,14 @@ public class AuthController {
         u.setPhoneNumber(req.phoneNumber());
         u.setPhoneVerified(false);
         u.setPhoneVerifiedAt(null);
+        // Optional org fields
+        if (req.orgName() != null && !req.orgName().isBlank()) u.setOrgName(req.orgName());
+        if (req.orgAddress() != null && !req.orgAddress().isBlank()) u.setOrgAddress(req.orgAddress());
+        if (req.orgLat() != null) u.setOrgLat(req.orgLat());
+        if (req.orgLng() != null) u.setOrgLng(req.orgLng());
         u = userRepo.save(u);
 
         phoneVerificationService.startVerification(u.getId());
-
         return ResponseEntity.ok(new AuthDtos.RegisterResponse("Registered. Verification code sent via SMS."));
     }
 
@@ -72,13 +77,22 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthDtos.LoginResponse> login(@Valid @RequestBody AuthDtos.LoginRequest req) {
         var user = userRepo.findByEmail(req.email().toLowerCase()).orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
-        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid credentials");
-        }
-        if (!user.isPhoneVerified()) {
-            throw new IllegalStateException("Phone not verified");
-        }
+        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) throw new IllegalArgumentException("Invalid credentials");
+        if (!user.isPhoneVerified()) throw new IllegalStateException("Phone not verified");
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
         return ResponseEntity.ok(new AuthDtos.LoginResponse(token));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<AuthDtos.GenericResponse> forgotPassword(@Valid @RequestBody AuthDtos.ForgotPasswordRequest req) {
+        passwordResetService.requestReset(req.email());
+        // Always return success to prevent user enumeration
+        return ResponseEntity.ok(new AuthDtos.GenericResponse("If that email is registered, a reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthDtos.GenericResponse> resetPassword(@Valid @RequestBody AuthDtos.ResetPasswordRequest req) {
+        passwordResetService.resetPassword(req.token(), req.newPassword());
+        return ResponseEntity.ok(new AuthDtos.GenericResponse("Password updated. You can now log in."));
     }
 }

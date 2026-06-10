@@ -3,6 +3,7 @@ package com.foodchain.domain;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "donations")
@@ -45,6 +46,18 @@ public class Donation {
     @Column(name = "day_key", nullable = false)
     private LocalDate dayKey;
 
+    @Column(name = "serving_count")
+    private Integer servingCount;
+
+    @Column(name = "pickup_start")
+    private LocalTime pickupStart;
+
+    @Column(name = "pickup_end")
+    private LocalTime pickupEnd;
+
+    @Column(name = "dietary_notes", length = 255)
+    private String dietaryNotes;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) createdAt = Instant.now();
@@ -78,4 +91,20 @@ public class Donation {
     public void setStatus(DonationStatus status) { this.status = status; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setDayKey(LocalDate dayKey) { this.dayKey = dayKey; }
+
+    public Integer getServingCount() { return servingCount; }
+    public LocalTime getPickupStart() { return pickupStart; }
+    public LocalTime getPickupEnd() { return pickupEnd; }
+    public String getDietaryNotes() { return dietaryNotes; }
+
+    public void setServingCount(Integer servingCount) { this.servingCount = servingCount; }
+    public void setPickupStart(LocalTime pickupStart) { this.pickupStart = pickupStart; }
+    public void setPickupEnd(LocalTime pickupEnd) { this.pickupEnd = pickupEnd; }
+    public void setDietaryNotes(String dietaryNotes) { this.dietaryNotes = dietaryNotes; }
+
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
+
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
 }

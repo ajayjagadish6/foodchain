@@ -18,7 +18,12 @@ public final class Mapper {
                 d.getPickupAddress(),
                 d.getPickupLat(),
                 d.getPickupLng(),
-                d.getStatus().name()
+                d.getStatus().name(),
+                d.getServingCount(),
+                d.getPickupStart() != null ? d.getPickupStart().toString() : null,
+                d.getPickupEnd()   != null ? d.getPickupEnd().toString()   : null,
+                d.getDietaryNotes(),
+                d.getPhotoUrl()
         );
     }
 
@@ -32,26 +37,40 @@ public final class Mapper {
                 r.getDropoffAddress(),
                 r.getDropoffLat(),
                 r.getDropoffLng(),
-                r.getStatus().name()
+                r.getStatus().name(),
+                r.getServingCount(),
+                r.getDietaryNotes()
         );
     }
 
     public static DeliveryDtos.DeliverySummary toSummary(Delivery d) {
-        String driverName = d.getDriver() == null ? null : d.getDriver().getDisplayName();
+        User driver = d.getDriver();
+        Donation don = d.getDonation();
+        FoodRequest req = d.getRequest();
         return new DeliveryDtos.DeliverySummary(
                 d.getId(),
                 d.getStatus().name(),
-                d.getDonation().getId(),
-                d.getRequest().getId(),
-                d.getDonation().getPickupAddress(),
-                d.getDonation().getPickupLat(),
-                d.getDonation().getPickupLng(),
-                d.getRequest().getDropoffAddress(),
-                d.getRequest().getDropoffLat(),
-                d.getRequest().getDropoffLng(),
-                d.getDonation().getDonor().getDisplayName(),
-                d.getRequest().getRecipient().getDisplayName(),
-                driverName
+                don.getId(),
+                req.getId(),
+                don.getPickupAddress(),
+                don.getPickupLat(),
+                don.getPickupLng(),
+                req.getDropoffAddress(),
+                req.getDropoffLat(),
+                req.getDropoffLng(),
+                don.getDonor().getDisplayName(),
+                don.getDonor().getPhoneNumber(),
+                req.getRecipient().getDisplayName(),
+                req.getRecipient().getPhoneNumber(),
+                driver != null ? driver.getDisplayName() : null,
+                driver != null ? driver.getPhoneNumber() : null,
+                don.getTitle(),
+                don.getCategory(),
+                don.getQuantity(),
+                don.getServingCount(),
+                don.getDietaryNotes(),
+                don.getPickupStart() != null ? don.getPickupStart().toString() : null,
+                don.getPickupEnd()   != null ? don.getPickupEnd().toString()   : null
         );
     }
 }

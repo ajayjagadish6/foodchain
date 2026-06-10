@@ -4,6 +4,24 @@ server:
 spring:
   application:
     name: foodchain
+
+  # ── Email (password reset) ─────────────────────────────────────────────────
+  # Set MAIL_HOST etc. to enable real sending; otherwise reset links are logged.
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
+
+  # ── File uploads ───────────────────────────────────────────────────────────
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://localhost:3306/foodchain?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
@@ -37,6 +55,17 @@ foodchain:
 
   matching:
     maxDistanceKm: ${MATCH_MAX_DISTANCE_KM:15.0}
+    retryCron: ${MATCH_RETRY_CRON:0 */5 * * * *}
+
+  uploads:
+    dir: ${UPLOADS_DIR:uploads}
+    urlPrefix: ${UPLOADS_URL_PREFIX:/uploads}
+
+  app:
+    baseUrl: ${APP_BASE_URL:http://localhost:5173}
+
+  mail:
+    enabled: ${FOODCHAIN_MAIL_ENABLED:false}
 
   sms:
     enabled: ${SMS_ENABLED:false}

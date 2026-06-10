@@ -4,6 +4,7 @@ import com.foodchain.domain.*;
 import com.foodchain.repo.*;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,9 +45,27 @@ public class MatchingService {
         var openRequests = requestRepo.findByStatusAndDayKey(RequestStatus.OPEN, today);
 
         for (Donation d : openDonations) {
+            final LocalTime now = LocalTime.now();
             Optional<FoodRequest> best = openRequests.stream()
+                    // Category must match
                     .filter(r -> r.getCategory().equalsIgnoreCase(d.getCategory()))
+                    // Must be within configured radius
                     .filter(r -> Geo.distanceKm(d.getPickupLat(), d.getPickupLng(), r.getDropoffLat(), r.getDropoffLng()) <= maxDistanceKm)
+                    // Time window: if the donation has a pickup window, current time must be within it
+                    .filter(r -> {
+                        if (d.getPickupStart() != null && d.getPickupEnd() != null) {
+                            return !now.isBefore(d.getPickupStart()) && !now.isAfter(d.getPickupEnd());
+                        }
+                        return true;
+                    })
+                    // Serving count: donation must be able to cover the request's need
+                    .filter(r -> {
+                        if (d.getServingCount() != null && r.getServingCount() != null) {
+                            return d.getServingCount() >= r.getServingCount();
+                        }
+                        return true;
+                    })
+                    // Nearest match wins
                     .min(Comparator.comparingDouble(r -> Geo.distanceKm(d.getPickupLat(), d.getPickupLng(), r.getDropoffLat(), r.getDropoffLng())));
 
             if (best.isPresent()) {

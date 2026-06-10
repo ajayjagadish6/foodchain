@@ -22,27 +22,23 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserDtos.MeView> me() {
-        var principal = CurrentUser.get();
-        var u = userRepo.findById(principal.userId()).orElseThrow();
-        return ResponseEntity.ok(new UserDtos.MeView(
-                u.getId(),
-                u.getEmail(),
-                u.getRole().name(),
-                u.getDisplayName(),
-                u.getPhoneNumber(),
-                u.isPhoneVerified()
-        ));
+        var u = userRepo.findById(CurrentUser.get().userId()).orElseThrow();
+        return ResponseEntity.ok(toView(u));
     }
 
     @PutMapping("/me")
     public ResponseEntity<UserDtos.GenericResponse> updateMe(@Valid @RequestBody UserDtos.UpdateMeRequest req) {
-        var principal = CurrentUser.get();
-        var u = userRepo.findById(principal.userId()).orElseThrow();
+        var u = userRepo.findById(CurrentUser.get().userId()).orElseThrow();
 
         boolean phoneChanged = !req.phoneNumber().equals(u.getPhoneNumber());
 
         u.setDisplayName(req.displayName());
         u.setPhoneNumber(req.phoneNumber());
+        u.setOrgName(req.orgName());
+        u.setOrgAddress(req.orgAddress());
+        u.setOrgLat(req.orgLat());
+        u.setOrgLng(req.orgLng());
+        if (req.orgLogoUrl() != null) u.setOrgLogoUrl(req.orgLogoUrl());
 
         if (phoneChanged) {
             u.setPhoneVerified(false);
@@ -55,14 +51,29 @@ public class UserController {
             phoneVerificationService.startVerification(u.getId());
             return ResponseEntity.ok(new UserDtos.GenericResponse("Profile updated. Verification code sent via SMS."));
         }
-
         return ResponseEntity.ok(new UserDtos.GenericResponse("Profile updated."));
     }
 
     @PostMapping("/me/resend-phone")
     public ResponseEntity<UserDtos.GenericResponse> resendPhone() {
-        var principal = CurrentUser.get();
-        phoneVerificationService.resend(principal.userId());
+        phoneVerificationService.resend(CurrentUser.get().userId());
         return ResponseEntity.ok(new UserDtos.GenericResponse("Verification code sent."));
+    }
+
+    @PostMapping("/me/logo")
+    public ResponseEntity<UserDtos.MeView> updateLogo(@RequestBody java.util.Map<String, String> body) {
+        var u = userRepo.findById(CurrentUser.get().userId()).orElseThrow();
+        String url = body.get("orgLogoUrl");
+        if (url != null) u.setOrgLogoUrl(url);
+        userRepo.save(u);
+        return ResponseEntity.ok(toView(u));
+    }
+
+    private UserDtos.MeView toView(com.foodchain.domain.User u) {
+        return new UserDtos.MeView(
+                u.getId(), u.getEmail(), u.getRole().name(), u.getDisplayName(),
+                u.getPhoneNumber(), u.isPhoneVerified(),
+                u.getOrgName(), u.getOrgAddress(), u.getOrgLat(), u.getOrgLng(), u.getOrgLogoUrl()
+        );
     }
 }

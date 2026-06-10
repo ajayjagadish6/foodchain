@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, Link, Stack, Typography } from '@mui/material'
-import { GoogleMap, Marker, Polyline, useJsApiLoader } from '@react-google-maps/api'
+import { GoogleMap, Marker, Polyline } from '@react-google-maps/api'
+import { useMapsLoader } from '../lib/maps'
 
 type LatLng = { lat: number, lng: number }
 
@@ -31,14 +32,8 @@ export function MapCard(props: {
 }) {
   const { pickup, dropoff, driver, deliveryStatus } = props
 
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined
-  const hasKey = !!apiKey
-
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey ?? '',
-    libraries: ['geometry']
-  })
+  const hasKey = !!import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+  const { isLoaded } = useMapsLoader()
 
   const [eta, setEta] = useState<string | null>(null)
   const [distance, setDistance] = useState<string | null>(null)

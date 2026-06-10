@@ -31,6 +31,21 @@ public class User {
     @Column(name = "phone_verified_at")
     private Instant phoneVerifiedAt;
 
+    @Column(name = "org_name", length = 255)
+    private String orgName;
+
+    @Column(name = "org_address", length = 255)
+    private String orgAddress;
+
+    @Column(name = "org_lat")
+    private Double orgLat;
+
+    @Column(name = "org_lng")
+    private Double orgLng;
+
+    @Column(name = "org_logo_url", length = 500)
+    private String orgLogoUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -58,4 +73,16 @@ public class User {
     public void setPhoneVerified(boolean phoneVerified) { this.phoneVerified = phoneVerified; }
     public void setPhoneVerifiedAt(Instant phoneVerifiedAt) { this.phoneVerifiedAt = phoneVerifiedAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public String getOrgName() { return orgName; }
+    public String getOrgAddress() { return orgAddress; }
+    public Double getOrgLat() { return orgLat; }
+    public Double getOrgLng() { return orgLng; }
+    public String getOrgLogoUrl() { return orgLogoUrl; }
+
+    public void setOrgName(String orgName) { this.orgName = orgName; }
+    public void setOrgAddress(String orgAddress) { this.orgAddress = orgAddress; }
+    public void setOrgLat(Double orgLat) { this.orgLat = orgLat; }
+    public void setOrgLng(Double orgLng) { this.orgLng = orgLng; }
+    public void setOrgLogoUrl(String orgLogoUrl) { this.orgLogoUrl = orgLogoUrl; }
 }

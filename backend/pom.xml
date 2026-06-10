@@ -135,6 +135,12 @@
       <scope>runtime</scope>
     </dependency>
 
+    <!-- Email (password reset) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+
     <!-- Optional integrations -->
     <dependency>
       <groupId>com.google.firebase</groupId>

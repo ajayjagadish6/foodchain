@@ -12,14 +12,24 @@ public class UserDtos {
             String role,
             String displayName,
             String phoneNumber,
-            boolean phoneVerified
+            boolean phoneVerified,
+            String orgName,
+            String orgAddress,
+            Double orgLat,
+            Double orgLng,
+            String orgLogoUrl
     ) {}
 
     public record UpdateMeRequest(
             @NotBlank @Size(max = 120) String displayName,
             @NotBlank
             @Pattern(regexp = "^\\+[1-9]\\d{7,14}$", message = "Phone must be in E.164 format, e.g. +14155552671")
-            String phoneNumber
+            String phoneNumber,
+            String orgName,
+            String orgAddress,
+            Double orgLat,
+            Double orgLng,
+            String orgLogoUrl
     ) {}
 
     public record GenericResponse(String message) {}

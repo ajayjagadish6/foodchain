@@ -8,6 +8,8 @@ import com.foodchain.security.CurrentUser;
 import com.foodchain.service.MatchingService;
 import com.foodchain.web.dto.DonationDtos;
 import jakarta.validation.Valid;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +43,15 @@ public class DonationController {
         d.setPickupAddress(req.pickupAddress());
         d.setPickupLat(req.pickupLat());
         d.setPickupLng(req.pickupLng());
+        d.setServingCount(req.servingCount());
+        d.setDietaryNotes(req.dietaryNotes());
+        d.setPhotoUrl(req.photoUrl());
+        if (req.pickupStart() != null && !req.pickupStart().isBlank()) {
+            try { d.setPickupStart(LocalTime.parse(req.pickupStart())); } catch (DateTimeParseException ignored) {}
+        }
+        if (req.pickupEnd() != null && !req.pickupEnd().isBlank()) {
+            try { d.setPickupEnd(LocalTime.parse(req.pickupEnd())); } catch (DateTimeParseException ignored) {}
+        }
 
         Donation saved = donationRepo.save(d);
 

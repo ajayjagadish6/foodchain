@@ -15,8 +15,19 @@ public class DeliveryDtos {
             double dropoffLat,
             double dropoffLng,
             String donorName,
+            String donorPhone,
             String recipientName,
-            String driverName
+            String recipientPhone,
+            String driverName,
+            String driverPhone,
+            // food details
+            String donationTitle,
+            String category,
+            String quantity,
+            Integer servingCount,
+            String dietaryNotes,
+            String pickupStart,
+            String pickupEnd
     ) {}
 
     public record LocationUpdate(@NotNull Double lat, @NotNull Double lng) {}

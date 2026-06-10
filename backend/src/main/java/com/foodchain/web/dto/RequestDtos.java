@@ -11,7 +11,9 @@ public class RequestDtos {
             @NotBlank String quantity,
             @NotBlank String dropoffAddress,
             @NotNull Double dropoffLat,
-            @NotNull Double dropoffLng
+            @NotNull Double dropoffLng,
+            Integer servingCount,
+            String dietaryNotes
     ) {}
 
     public record RequestView(
@@ -23,6 +25,8 @@ public class RequestDtos {
             String dropoffAddress,
             double dropoffLat,
             double dropoffLng,
-            String status
+            String status,
+            Integer servingCount,
+            String dietaryNotes
     ) {}
 }

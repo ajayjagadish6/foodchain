@@ -40,6 +40,8 @@ public class RequestController {
         r.setDropoffAddress(req.dropoffAddress());
         r.setDropoffLat(req.dropoffLat());
         r.setDropoffLng(req.dropoffLng());
+        r.setServingCount(req.servingCount());
+        r.setDietaryNotes(req.dietaryNotes());
 
         FoodRequest saved = requestRepo.save(r);
 

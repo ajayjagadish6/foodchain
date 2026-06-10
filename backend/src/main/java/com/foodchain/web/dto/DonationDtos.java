@@ -11,7 +11,12 @@ public class DonationDtos {
             @NotBlank String quantity,
             @NotBlank String pickupAddress,
             @NotNull Double pickupLat,
-            @NotNull Double pickupLng
+            @NotNull Double pickupLng,
+            Integer servingCount,
+            String pickupStart,   // "HH:mm"
+            String pickupEnd,     // "HH:mm"
+            String dietaryNotes,
+            String photoUrl
     ) {}
 
     public record DonationView(
@@ -23,6 +28,11 @@ public class DonationDtos {
             String pickupAddress,
             double pickupLat,
             double pickupLng,
-            String status
+            String status,
+            Integer servingCount,
+            String pickupStart,
+            String pickupEnd,
+            String dietaryNotes,
+            String photoUrl
     ) {}
 }
