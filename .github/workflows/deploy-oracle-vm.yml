@@ -92,17 +92,18 @@ jobs:
           key: ${{ secrets.OCI_VM_SSH_KEY }}
           port: ${{ secrets.OCI_VM_SSH_PORT || 22 }}
           envs: MYSQL_APP_PASSWORD,MYSQL_ROOT_PASSWORD,JWT_SECRET,REPO_URL,REPO_DIR
+          request_pty: true
           script_stop: true
           script: |
-            set -eo pipefail   # no -u: appleboy may pass empty strings for unset secrets
+            set -eo pipefail
 
-            # Validate that MYSQL_APP_PASSWORD arrived non-empty
+            # Validate secrets arrived non-empty
             if [ -z "${MYSQL_APP_PASSWORD:-}" ]; then
-              echo "ERROR: MYSQL_APP_PASSWORD is empty. Add it as a GitHub Actions secret." >&2
+              echo "ERROR: MYSQL_APP_PASSWORD is empty."
               exit 1
             fi
             if [ -z "${JWT_SECRET:-}" ]; then
-              echo "ERROR: JWT_SECRET is empty. Add it as a GitHub Actions secret." >&2
+              echo "ERROR: JWT_SECRET is empty."
               exit 1
             fi
 
@@ -119,17 +120,18 @@ jobs:
             git checkout main
             git reset --hard "origin/main"
 
+            # 2>&1 merges stderr into stdout so all output appears in the Actions log
             if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
                 PREBUILT_JAR="/tmp/foodchain.jar" \
-                bash deploy/ubuntu-vm/deploy.sh
+                bash deploy/ubuntu-vm/deploy.sh 2>&1
             else
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
                 PREBUILT_JAR="/tmp/foodchain.jar" \
-                bash deploy/ubuntu-vm/deploy.sh
+                bash deploy/ubuntu-vm/deploy.sh 2>&1
             fi
