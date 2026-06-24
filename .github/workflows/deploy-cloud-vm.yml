@@ -1,0 +1,76 @@
+name: Deploy to Cloud VM
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate required secrets
+        env:
+          OCI_VM_HOST:        ${{ secrets.OCI_VM_HOST }}
+          OCI_VM_USER:        ${{ secrets.OCI_VM_USER }}
+          OCI_VM_SSH_KEY:     ${{ secrets.OCI_VM_SSH_KEY }}
+          MYSQL_APP_PASSWORD: ${{ secrets.MYSQL_APP_PASSWORD }}
+          JWT_SECRET:         ${{ secrets.JWT_SECRET }}
+        run: |
+          MISSING=""
+          [ -z "${OCI_VM_HOST}"        ] && MISSING="${MISSING} OCI_VM_HOST"
+          [ -z "${OCI_VM_USER}"        ] && MISSING="${MISSING} OCI_VM_USER"
+          [ -z "${OCI_VM_SSH_KEY}"     ] && MISSING="${MISSING} OCI_VM_SSH_KEY"
+          [ -z "${MYSQL_APP_PASSWORD}" ] && MISSING="${MISSING} MYSQL_APP_PASSWORD"
+          [ -z "${JWT_SECRET}"         ] && MISSING="${MISSING} JWT_SECRET"
+          if [ -n "${MISSING}" ]; then
+            echo "::error::Required secrets missing:${MISSING}"
+            exit 1
+          fi
+          echo "All required secrets are present."
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          MYSQL_APP_PASSWORD: ${{ secrets.MYSQL_APP_PASSWORD }}
+          JWT_SECRET:         ${{ secrets.JWT_SECRET }}
+        with:
+          host:            ${{ secrets.OCI_VM_HOST }}
+          username:        ${{ secrets.OCI_VM_USER }}
+          key:             ${{ secrets.OCI_VM_SSH_KEY }}
+          port:            22
+          timeout:         60s
+          command_timeout: 30m
+          envs:            MYSQL_APP_PASSWORD,JWT_SECRET
+          script_stop:     false
+          script: |
+            exec 2>&1
+            set -e
+
+            echo "==[0]== VM: $(curl -sf --max-time 5 https://api.ipify.org || hostname -I | awk '{print $1}')"
+
+            echo "==[1]== secrets check"
+            [ -n "${MYSQL_APP_PASSWORD:-}" ] || { echo "FATAL: MYSQL_APP_PASSWORD is empty"; exit 1; }
+            [ -n "${JWT_SECRET:-}"         ] || { echo "FATAL: JWT_SECRET is empty"; exit 1; }
+            echo "==[1]== OK"
+
+            echo "==[2]== repo sync"
+            REPO_DIR="/opt/foodchain-src"
+            curl -fsS --max-time 10 https://github.com >/dev/null || { echo "FATAL: VM cannot reach github.com"; exit 1; }
+            if [ ! -d "${REPO_DIR}/.git" ]; then
+              git clone "https://github.com/${{ github.repository }}.git" "${REPO_DIR}"
+            fi
+            cd "${REPO_DIR}"
+            git fetch --prune origin
+            git checkout main
+            git reset --hard "origin/main"
+            echo "==[2]== OK — $(git rev-parse --short HEAD)"
+
+            echo "==[3]== deploy.sh"
+            export MYSQL_APP_PASSWORD JWT_SECRET REPO_SOURCE="${REPO_DIR}"
+            bash deploy/ubuntu-vm/deploy.sh
+            echo "==[3]== deploy complete"
