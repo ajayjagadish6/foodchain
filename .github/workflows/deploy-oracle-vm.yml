@@ -68,17 +68,7 @@ jobs:
           mvn -f backend/pom.xml -DskipTests package
           cp backend/target/foodchain.jar foodchain.jar
 
-      - name: Upload jar to VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.OCI_VM_HOST }}
-          username: ${{ secrets.OCI_VM_USER }}
-          key: ${{ secrets.OCI_VM_SSH_KEY }}
-          port: ${{ secrets.OCI_VM_SSH_PORT || 22 }}
-          source: foodchain.jar
-          target: /tmp
-
-      - name: Deploy prebuilt jar over SSH
+      - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
           MYSQL_APP_PASSWORD: ${{ secrets.MYSQL_APP_PASSWORD }}
@@ -123,19 +113,17 @@ jobs:
             sudo -n id || { echo "FATAL: sudo requires a password or is not configured"; exit 1; }
             echo "==[3]== OK — running as $(sudo id -un)"
 
-            echo "==[4]== deploy.sh"
+            echo "==[4]== deploy.sh (building from source on VM)"
             if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
-                PREBUILT_JAR="/tmp/foodchain.jar" \
                 bash deploy/ubuntu-vm/deploy.sh
             else
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
-                PREBUILT_JAR="/tmp/foodchain.jar" \
                 bash deploy/ubuntu-vm/deploy.sh
             fi
             echo "==[4]== deploy complete"
