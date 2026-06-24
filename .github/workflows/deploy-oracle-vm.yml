@@ -118,16 +118,17 @@ jobs:
             echo "==[3]== OK — running as $(sudo id -un)"
 
             echo "==[4]== deploy.sh (building from source on VM)"
+            DEPLOY_LOG=/tmp/foodchain-deploy.log
             if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
-                bash deploy/ubuntu-vm/deploy.sh
+                bash deploy/ubuntu-vm/deploy.sh 2>&1 | tee "${DEPLOY_LOG}"
             else
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
-                bash deploy/ubuntu-vm/deploy.sh
+                bash deploy/ubuntu-vm/deploy.sh 2>&1 | tee "${DEPLOY_LOG}"
             fi
             echo "==[4]== deploy complete"
