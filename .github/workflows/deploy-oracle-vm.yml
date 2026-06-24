@@ -89,8 +89,8 @@ jobs:
             set -eo pipefail
 
             echo "==[1]== secrets check"
-            [ -z "${MYSQL_APP_PASSWORD:-}" ] && { echo "FATAL: MYSQL_APP_PASSWORD is empty"; exit 1; }
-            [ -z "${JWT_SECRET:-}" ]         && { echo "FATAL: JWT_SECRET is empty"; exit 1; }
+            [ -n "${MYSQL_APP_PASSWORD:-}" ] || { echo "FATAL: MYSQL_APP_PASSWORD is empty"; exit 1; }
+            [ -n "${JWT_SECRET:-}" ]         || { echo "FATAL: JWT_SECRET is empty"; exit 1; }
             echo "==[1]== OK"
 
             echo "==[2]== repo sync"
@@ -107,7 +107,7 @@ jobs:
             echo "==[2]== OK — $(git rev-parse --short HEAD)"
 
             echo "==[3]== sudo smoke test"
-            sudo -n id || { echo "FATAL: sudo requires a password or is not configured"; exit 1; }
+            sudo -n id || { echo "FATAL: sudo not passwordless — add ubuntu to sudoers with NOPASSWD"; exit 1; }
             echo "==[3]== OK — running as $(sudo id -un)"
 
             echo "==[4]== deploy.sh (building from source on VM)"
