@@ -86,6 +86,11 @@ foodchain:
       topicId: ${PUBSUB_TOPIC_ID:foodchain-events}
       subscriptionPrefix: ${PUBSUB_SUB_PREFIX:foodchain-events-sub}
 
+management:
+  health:
+    mail:
+      enabled: false
+
 logging:
   level:
     root: INFO
