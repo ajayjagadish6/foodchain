@@ -75,6 +75,7 @@ jobs:
           username: ${{ secrets.OCI_VM_USER }}
           key: ${{ secrets.OCI_VM_SSH_KEY }}
           port: ${{ secrets.OCI_VM_SSH_PORT || 22 }}
+          timeout: 60s
           script_stop: true
           script: |
             exec 2>&1
