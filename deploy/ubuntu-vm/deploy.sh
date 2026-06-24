@@ -42,7 +42,7 @@ if command -v apt-get >/dev/null 2>&1; then
   apt-get update
   APT_PACKAGES=(git rsync nginx mysql-server openjdk-21-jdk curl)
   if [[ "${USE_PREBUILT}" != "true" ]]; then
-    APT_PACKAGES+=(maven nodejs npm)
+    APT_PACKAGES+=(maven nodejs)
   fi
   apt-get install -y "${APT_PACKAGES[@]}"
   MYSQL_SERVICE="mysql"
