@@ -68,6 +68,27 @@ jobs:
           mvn -f backend/pom.xml -DskipTests package
           cp backend/target/foodchain.jar foodchain.jar
 
+      - name: Wait for VM SSH readiness
+        run: |
+          echo "${{ secrets.OCI_VM_SSH_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          echo "Waiting for VM SSH (up to 5 min)..."
+          for i in $(seq 1 10); do
+            if ssh -i /tmp/deploy_key \
+                   -o StrictHostKeyChecking=no \
+                   -o ConnectTimeout=15 \
+                   -o BatchMode=yes \
+                   ${{ secrets.OCI_VM_USER }}@${{ secrets.OCI_VM_HOST }} \
+                   "echo SSH_READY" 2>&1 | grep -q SSH_READY; then
+              echo "VM SSH ready after attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i/10 — VM not ready, waiting 30s..."
+            sleep 30
+          done
+          echo "VM SSH not available after 5 minutes"
+          exit 1
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
