@@ -82,6 +82,7 @@ jobs:
           key: ${{ secrets.OCI_VM_SSH_KEY }}
           port: ${{ secrets.OCI_VM_SSH_PORT || 22 }}
           timeout: 60s
+          command_timeout: 30m
           envs: MYSQL_APP_PASSWORD,MYSQL_ROOT_PASSWORD,JWT_SECRET,REPO_URL,REPO_DIR
           script_stop: true
           script: |
@@ -96,11 +97,17 @@ jobs:
             echo "==[2]== repo sync"
             REPO_URL="${REPO_URL:-https://github.com/${{ github.repository }}.git}"
             REPO_DIR="${REPO_DIR:-/opt/foodchain-src}"
+            echo "==[2a]== outbound check"
+            curl -fsS --max-time 10 https://github.com > /dev/null || { echo "FATAL: VM cannot reach github.com outbound"; exit 1; }
+            echo "==[2a]== OK"
             if [ ! -d "${REPO_DIR}/.git" ]; then
+              echo "==[2b]== cloning (first run)"
               mkdir -p "${REPO_DIR}"
               git clone "${REPO_URL}" "${REPO_DIR}"
+              echo "==[2b]== clone done"
             fi
             cd "${REPO_DIR}"
+            echo "==[2c]== fetching origin"
             git fetch --prune origin
             git checkout main
             git reset --hard "origin/main"
