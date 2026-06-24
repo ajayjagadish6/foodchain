@@ -70,35 +70,29 @@ jobs:
 
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
-        env:
-          MYSQL_APP_PASSWORD: ${{ secrets.MYSQL_APP_PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          REPO_URL: ${{ secrets.OCI_REPO_URL }}
-          REPO_DIR: ${{ secrets.OCI_REPO_DIR }}
         with:
           host: ${{ secrets.OCI_VM_HOST }}
           username: ${{ secrets.OCI_VM_USER }}
           key: ${{ secrets.OCI_VM_SSH_KEY }}
           port: ${{ secrets.OCI_VM_SSH_PORT || 22 }}
-          envs: MYSQL_APP_PASSWORD,MYSQL_ROOT_PASSWORD,JWT_SECRET,REPO_URL,REPO_DIR
           script_stop: true
           script: |
-            # Redirect ALL stderr to stdout for this entire shell session.
-            # drone-ssh only forwards the SSH stdout channel; any error that
-            # goes to stderr is silently discarded.  exec 2>&1 fixes that at
-            # the OS level so nothing can escape the log.
             exec 2>&1
             set -eo pipefail
 
             echo "==[1]== secrets check"
-            [ -z "${MYSQL_APP_PASSWORD:-}" ] && { echo "FATAL: MYSQL_APP_PASSWORD is empty"; exit 1; }
-            [ -z "${JWT_SECRET:-}" ]         && { echo "FATAL: JWT_SECRET is empty"; exit 1; }
+            MYSQL_APP_PASSWORD='${{ secrets.MYSQL_APP_PASSWORD }}'
+            MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
+            JWT_SECRET='${{ secrets.JWT_SECRET }}'
+            [ -z "${MYSQL_APP_PASSWORD}" ] && { echo "FATAL: MYSQL_APP_PASSWORD is empty"; exit 1; }
+            [ -z "${JWT_SECRET}" ]         && { echo "FATAL: JWT_SECRET is empty"; exit 1; }
             echo "==[1]== OK"
 
             echo "==[2]== repo sync"
-            REPO_URL="${REPO_URL:-https://github.com/${{ github.repository }}.git}"
+            REPO_DIR='${{ secrets.OCI_REPO_DIR }}'
             REPO_DIR="${REPO_DIR:-/opt/foodchain-src}"
+            REPO_URL='${{ secrets.OCI_REPO_URL }}'
+            REPO_URL="${REPO_URL:-https://github.com/${{ github.repository }}.git}"
             if [ ! -d "${REPO_DIR}/.git" ]; then
               mkdir -p "${REPO_DIR}"
               git clone "${REPO_URL}" "${REPO_DIR}"
@@ -114,7 +108,7 @@ jobs:
             echo "==[3]== OK — running as $(sudo id -un)"
 
             echo "==[4]== deploy.sh (building from source on VM)"
-            if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
+            if [ -n "${MYSQL_ROOT_PASSWORD}" ]; then
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
