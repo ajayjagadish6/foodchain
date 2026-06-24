@@ -119,16 +119,23 @@ jobs:
 
             echo "==[4]== deploy.sh (building from source on VM)"
             DEPLOY_LOG=/tmp/foodchain-deploy.log
+            set +e
             if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
-                bash deploy/ubuntu-vm/deploy.sh 2>&1 | tee "${DEPLOY_LOG}"
+                REPO_SOURCE="$(pwd)" \
+                bash deploy/ubuntu-vm/deploy.sh >"${DEPLOY_LOG}" 2>&1
             else
               sudo -E env \
                 MYSQL_APP_PASSWORD="${MYSQL_APP_PASSWORD}" \
                 JWT_SECRET="${JWT_SECRET}" \
-                bash deploy/ubuntu-vm/deploy.sh 2>&1 | tee "${DEPLOY_LOG}"
+                REPO_SOURCE="$(pwd)" \
+                bash deploy/ubuntu-vm/deploy.sh >"${DEPLOY_LOG}" 2>&1
             fi
+            DEPLOY_EXIT=$?
+            set -e
+            cat "${DEPLOY_LOG}"
+            [ "${DEPLOY_EXIT}" -eq 0 ] || { echo "FATAL: deploy.sh exited with status ${DEPLOY_EXIT}"; exit "${DEPLOY_EXIT}"; }
             echo "==[4]== deploy complete"
