@@ -144,12 +144,12 @@ chown -h "${APP_USER}:${APP_GROUP}" "${APP_ROOT}/current"
 chown -R "${APP_USER}:${APP_GROUP}" "${RELEASE_DIR}"
 
 install -m 0644 "${REPO_SOURCE}/deploy/ubuntu-vm/foodchain.service" "${SYSTEMD_UNIT}"
-if [[ -d /etc/nginx/conf.d ]]; then
-  install -m 0644 "${REPO_SOURCE}/deploy/ubuntu-vm/nginx-foodchain.conf" "/etc/nginx/conf.d/foodchain.conf"
-elif [[ -d /etc/nginx/sites-available ]]; then
+if [[ -d /etc/nginx/sites-available ]]; then
   install -m 0644 "${REPO_SOURCE}/deploy/ubuntu-vm/nginx-foodchain.conf" "/etc/nginx/sites-available/foodchain.conf"
   ln -sfn /etc/nginx/sites-available/foodchain.conf /etc/nginx/sites-enabled/foodchain.conf
   rm -f /etc/nginx/sites-enabled/default
+elif [[ -d /etc/nginx/conf.d ]]; then
+  install -m 0644 "${REPO_SOURCE}/deploy/ubuntu-vm/nginx-foodchain.conf" "/etc/nginx/conf.d/foodchain.conf"
 else
   echo "Unable to locate nginx config directory."
   exit 1
