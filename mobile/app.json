@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "FoodChain",
+    "slug": "foodchain",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#16A34A"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.foodchain.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#16A34A"
+      },
+      "package": "com.foodchain.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        { "color": "#16A34A" }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "FoodChain uses your location for delivery tracking."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FoodChain accesses your photos to upload food images."
+        }
+      ]
+    ],
+    "scheme": "foodchain",
+    "web": { "bundler": "metro" },
+    "experiments": { "typedRoutes": true }
+  }
+}
